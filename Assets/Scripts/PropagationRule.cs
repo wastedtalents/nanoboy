@@ -15,8 +15,7 @@ public class PropagationRule : ScriptableObject, IDisposable
     public string name;
     public PropagationRuleType type;
    
-    public byte[][] preCondition;
-    public byte[][] postCondition;
+    public ByteArrayWrapper[] preCondition;
 
     public PropagationRule()
     {
@@ -28,42 +27,32 @@ public class PropagationRule : ScriptableObject, IDisposable
     public void UpdateType()
     {
         DisposeGrid(preCondition);
-        DisposeGrid(postCondition);
 
         switch (type)
         {
             case PropagationRuleType.R_3X3:
             {
-                preCondition = new byte[3][];
-                postCondition = new byte[3][];
+                preCondition = new ByteArrayWrapper[3];
                 for (int row = 0; row < 3; row++)
-                {
-                    preCondition[row] = new byte[3];
-                    postCondition[row] = new byte[3];
-                }
+                    preCondition[row] = new ByteArrayWrapper(3);
                 break;
             }
             case PropagationRuleType.R_5V5:
             {
-
-                preCondition = new byte[5][];
-                postCondition = new byte[5][];
+                preCondition = new ByteArrayWrapper[5];
                 for (int row = 0; row < 5; row++)
-                {
-                    preCondition[row] = new byte[5];
-                    postCondition[row] = new byte[5];
-                }
+                    preCondition[row] = new ByteArrayWrapper(5);
                 break;
             }
         }
     }
 
-    private void DisposeGrid(byte[][] grid)
+    private void DisposeGrid(ByteArrayWrapper[] grid)
     {
         if (grid == null)
             return;
-        for (int row = 0; row < grid.Length; row++)
-            grid[row] = null;
+        foreach(var row in preCondition)
+            row.Dispose();
     }
 
     public override string ToString()
@@ -94,7 +83,6 @@ public class PropagationRule : ScriptableObject, IDisposable
     public void Dispose()
     {
         DisposeGrid(preCondition);
-        DisposeGrid(postCondition);
-        preCondition = postCondition = null;
+        preCondition = null;
     }
 }

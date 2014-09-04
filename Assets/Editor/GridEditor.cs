@@ -133,6 +133,7 @@ public class GridEditor : Editor
             if (EditorGUI.EndChangeCheck())
                 _newRule.UpdateType();
 
+
             DrawRuleGrid("Alive condition : ", _tempPropType);
            // DrawRuleGrid("Rule consequence : ", _newRule.type); // TO BE USED MAYBE L*R.
 
