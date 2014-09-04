@@ -13,6 +13,14 @@ public enum TileType : byte
     Hostile = 3
 }
 
+public enum TileTypeAbbrev : byte
+{
+    N = 0,
+    D = 1,
+    S = 2,
+    H = 3
+}
+
 [Flags]
 public enum RedrawMode : byte
 {
@@ -32,6 +40,8 @@ public enum RedrawMode : byte
 
 public class Grid : MonoBehaviour
 {
+    public static string[] TileTypeAbbrevNames;
+
     private const string ROOT_TAG = "RootMapObject";
     private const string PLATFORM_TAG = "Platform";
     private const string ROOT_NAME = "_map";
@@ -48,6 +58,8 @@ public class Grid : MonoBehaviour
     public int cols = 10;
     public Vector2 startPoint;
 
+    public List<PropagationRule> propagationRules; 
+
     private byte[][] _cells;
     private Dictionary<int, GameObject> _objects;
 
@@ -56,6 +68,11 @@ public class Grid : MonoBehaviour
     private Platform _tempPlatform;
     private int _tempIndex;
     private int _index;
+
+    static Grid()
+    {
+        TileTypeAbbrevNames = Enum.GetNames(typeof(TileTypeAbbrev));
+    }
 
     void OnEnable()
     {
@@ -304,6 +321,13 @@ public class Grid : MonoBehaviour
         var root = GameObject.FindGameObjectWithTag(ROOT_TAG);
         DestroyImmediate(root);
         InitGrid();
+    }
+
+    public void ResetRules()
+    {
+        foreach (var rule in propagationRules)
+            rule.Dispose();
+        propagationRules.Clear();
     }
 }
 
