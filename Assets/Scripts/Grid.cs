@@ -13,6 +13,11 @@ public enum TileType : byte
     Hostile = 3
 }
 
+public enum RecipientTileType : byte {
+    Dynamic = 1,
+    Hostile = 3   
+}
+
 public enum TileTypeAbbrev : byte
 {
     N = 0,
@@ -20,6 +25,7 @@ public enum TileTypeAbbrev : byte
     S = 2,
     H = 3
 }
+
 
 [Flags]
 public enum RedrawMode : byte
@@ -61,6 +67,7 @@ public class Grid : MonoBehaviour
     public List<PropagationRule> propagationRules; 
 
     private byte[][] _cells;
+    private byte[][] _lastCells;
     private Dictionary<int, GameObject> _objects;
 
     // temps.
@@ -85,9 +92,14 @@ public class Grid : MonoBehaviour
     void InitGrid()
     {
         _cells = new byte[rows][];
+        _lastCells = new byte[rows][];
+
         _objects = new Dictionary<int, GameObject>();
         for (int i = 0; i < rows; i++)
+        {
             _cells[i] = new byte[cols];
+            _lastCells[i] = new byte[cols];
+        }
 
         // reload currently visible data.
         var items = 0;
@@ -268,6 +280,42 @@ public class Grid : MonoBehaviour
     }
 
     /// <summary>
+    /// Destroys cell.
+    /// </summary>
+    private void DestroyCell(int row, int col)
+    {
+        _cells[row][col] = (byte)TileType.None;
+
+        _index = GetIndex(row, col);
+        if (!_objects.ContainsKey(_index))
+            return;
+        DestroyImmediate(_objects[_index]);
+        _objects[_index] = null;
+        _objects.Remove(_index);
+    }
+
+    private void AddCell(Vector3 aligned, GameObject prefab, TileType prefabType, int row, int col)
+    {
+        var root = EnsureRootObject();
+        var obj = (GameObject)PrefabUtility.InstantiatePrefab(prefab);
+
+        obj.transform.position = aligned;
+        obj.transform.localScale = new Vector3(width, height, 1);
+        obj.tag = PLATFORM_TAG;
+
+        var platform = obj.GetComponent<Platform>();
+        platform.gridXpos = col;
+        platform.gridYpos = row;
+        platform.type = prefabType;
+
+        _cells[row][col] = (byte)prefabType;
+        _index = GetIndex(row, col);
+        _objects[_index] = obj;
+
+        obj.transform.parent = root.transform;
+    }
+
+    /// <summary>
     /// Adds an item of a given type to the grid.
     /// </summary>
     /// <param name="pefabType"></param>
@@ -281,38 +329,17 @@ public class Grid : MonoBehaviour
 
         if (_cells[indexy][indexx] != (byte)TileType.None) // theres sth there!
         {
-            _cells[indexy][indexx] = (byte)TileType.None;
-
-            _index = GetIndex(indexy, indexx);
-            if (!_objects.ContainsKey(_index))
-                return;
-            DestroyImmediate(_objects[_index]);
-            _objects[_index] = null;
-            _objects.Remove(_index);
+          DestroyCell(indexy, indexx);
         }
         else // we can add
         {
-            var root = EnsureRootObject();
             var posX = mousePos.x - startPoint.x;
             var posY = mousePos.y - startPoint.y;
 
-            var obj = (GameObject)PrefabUtility.InstantiatePrefab(prefab);
             var aligned = new Vector3(startPoint.x + Mathf.Floor(posX / width) * width + width / 2.0f + tileOffsetX,
                 startPoint.y + Mathf.Floor(posY / height) * height + height / 2.0f + tileOffsetY, 0.0f);
-            obj.transform.position = aligned;
-            obj.transform.localScale = new Vector3(width, height, 1);
-            obj.tag = PLATFORM_TAG;
 
-            var platform = obj.GetComponent<Platform>();
-            platform.gridXpos = indexx;
-            platform.gridYpos = indexy;
-            platform.type = pefabType;
-
-            _cells[indexy][indexx] = (byte)pefabType;
-            _index = GetIndex(indexy, indexx);
-            _objects[_index] = obj;
-
-            obj.transform.parent = root.transform;
+            AddCell(aligned, prefab, pefabType, indexy, indexx);
         }
     }
 
@@ -328,6 +355,60 @@ public class Grid : MonoBehaviour
         foreach (var rule in propagationRules)
             rule.Dispose();
         propagationRules.Clear();
+    }
+
+    // Next step
+    public void NextSimulationStep() {
+        BackupGrid();
+        Simulate();
+    }
+
+    void Simulate() {
+         for(int row = 0; row < rows; row++) { 
+             for(int col = 0; col < cols; col++) {
+                 var neighbours = AliveNeighbours(_lastCells, row, col);
+                 var isAlive = _cells[row][col] == 1;
+                 if(isAlive) {
+                     if (neighbours > 3 || neighbours < 2)
+                     {
+                         DestroyCell(row,col);
+                     }
+                 }
+                 else if(neighbours == 3)
+                 {
+                     var position = new Vector3(col * width + startPoint.x + width / 2.0f + tileOffsetX, row * height + startPoint.y + height / 2.0f + tileOffsetY, 0);
+                     AddCell(position, AssetDB.Prefabs[0], TileType.Dynamic, row, col); // TODO : change this to account for other types.
+                     _cells[row][col] = (byte)TileType.Dynamic;
+                 }
+             }
+         }
+    }
+
+    /// <summary>
+    /// Count alive neighbours of a cell.
+    /// </summary>
+    /// <param name="board"></param>
+    /// <param name="row"></param>
+    /// <param name="col"></param>
+    /// <returns></returns>
+    int AliveNeighbours(byte[][] board, int row, int col)
+    {
+        var sum = 0;
+        for (int i = (row == 0 ? 0 : row - 1); i <= ((row >= rows - 1) ? row : row + 1); i++)
+        {
+            for (int j = (col == 0 ? 0 : col - 1); j <= ((col >= cols - 1) ? col : col + 1); j++)
+            {
+                if (i != row || j != col)
+                    sum += board[i][j]; // that is to be changed to account for any board element.
+            }
+        }
+        return sum;
+    }
+
+    void BackupGrid() {
+        for(int i=0; i < rows; i++) {
+            Array.Copy(_cells[i], 0, _lastCells[i], 0 , cols); // copy
+        }
     }
 }
 

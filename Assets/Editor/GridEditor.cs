@@ -8,7 +8,6 @@ using System.Collections;
 public class GridEditor : Editor
 {
 	private Grid _grid;
-    private List<GameObject> _prefabs;
     
     private bool _showGridSection = true;
     private bool _showRulesSection = true;
@@ -19,7 +18,6 @@ public class GridEditor : Editor
     private PropagationRule _newRule;
     private PropagationRuleType _tempPropType;
 
-    private Texture _cellIcon;
 
     public override void OnInspectorGUI()
     {
@@ -133,6 +131,9 @@ public class GridEditor : Editor
             if (EditorGUI.EndChangeCheck())
                 _newRule.UpdateType();
 
+             _newRule.forTileType = (RecipientTileType)DrawEnums("Tile type : ", (byte)_newRule.forTileType, typeof(RecipientTileType)); // New rule stetup.   
+
+            _newRule.forLiveCell = EditorGUILayout.Toggle("For alive cell", _newRule.forLiveCell);
 
             DrawRuleGrid("Alive condition : ", _tempPropType);
            // DrawRuleGrid("Rule consequence : ", _newRule.type); // TO BE USED MAYBE L*R.
@@ -164,7 +165,7 @@ public class GridEditor : Editor
             {
                 GUILayout.BeginHorizontal();
                 GUILayout.Label(propRule.ToString());
-                if (GUILayout.Button("delete", GUILayout.Width(50)))
+                if (GUILayout.Button("x", GUILayout.Width(20)))
                     removeRule = propRule;
                 GUILayout.EndHorizontal();
             }
@@ -181,29 +182,36 @@ public class GridEditor : Editor
 
     private void DrawRuleGrid(string name, PropagationRuleType type)
     {
-        Debug.Log(_newRule);
-
         GUILayout.Label(name); // Add new rule.
-        
-       // midx, midy;
-        _tempX = _tempY = (int)Mathf.Floor(_newRule.preCondition.Length/2);
-                  
-        // Draw grid.
-        for (int row = 0; row < _newRule.preCondition.Length; row++)
-        {
-            GUILayout.BeginHorizontal();
-            for (int col = 0; col < _newRule.preCondition[row].Length; col++)
-            {
-                if (row == _tempY && col == _tempX)
-                    GUILayout.Label("    X", GUILayout.Width(50));
-                else
-                    _newRule.preCondition[row][col] = (byte) DrawEnums("", _newRule.preCondition[row][col],
-                        typeof (TileTypeAbbrev), GUILayout.Width(50));
-            }
-            GUILayout.EndHorizontal();            
-        }
 
-        
+        // show aggregates.
+        if (_newRule.type == PropagationRuleType.Aggregate) {
+            _newRule.ruleOp = (AggregateRuleOp)DrawEnums("Alive neighbours :", (int)_newRule.ruleOp, typeof(AggregateRuleOp)); // New rule stetup.   
+            GUILayout.BeginHorizontal();
+            _newRule.numbers.value1 = Int32.Parse(EditorGUILayout.TextField("", _newRule.numbers.value1.ToString(), GUILayout.Width(20)));
+            if(_newRule.ruleOp == AggregateRuleOp.Between) 
+                _newRule.numbers.value2 = Int32.Parse(EditorGUILayout.TextField("", _newRule.numbers.value2.ToString(), GUILayout.Width(20)));
+            GUILayout.EndHorizontal();
+         }
+        else {
+           // midx, midy;
+            _tempX = _tempY = (int)Mathf.Floor(_newRule.preCondition.Length/2);
+                      
+            // Draw grid.
+            for (int row = 0; row < _newRule.preCondition.Length; row++)
+            {
+                GUILayout.BeginHorizontal();
+                for (int col = 0; col < _newRule.preCondition[row].Length; col++)
+                {
+                    if (row == _tempY && col == _tempX)
+                        GUILayout.Label("    X", GUILayout.Width(50));
+                    else
+                        _newRule.preCondition[row][col] = (byte) DrawEnums("", _newRule.preCondition[row][col],
+                            typeof (TileTypeAbbrev), GUILayout.Width(50));
+                }
+                GUILayout.EndHorizontal();            
+            }
+        }
     }
 
     private static int DrawEnums(string label, int index, System.Type aType, GUILayoutOption layout = null)
@@ -221,32 +229,16 @@ public class GridEditor : Editor
 	void OnEnable()
 	{
 		_grid = (Grid)target;
-	    LoadPrefabs();
         SceneView.onSceneGUIDelegate = GridUpdate;
 	}
-
-    private void LoadPrefabs()
-    {
-        if (_prefabs == null || _prefabs.Count == 0)
-        {
-            _prefabs = new List<GameObject>
-            {
-                AssetDatabase.LoadAssetAtPath("Assets/Prefabs/Tiles/DynamicCell.prefab", typeof (GameObject)) as
-                    GameObject,
-                AssetDatabase.LoadAssetAtPath("Assets/Prefabs/Tiles/StaticCell.prefab", typeof (GameObject)) as
-                    GameObject,
-                AssetDatabase.LoadAssetAtPath("Assets/Prefabs/Tiles/HostileCell.prefab", typeof (GameObject)) as
-                    GameObject
-            };
-        }
-        _cellIcon = AssetDatabase.LoadAssetAtPath("Assets/Resources/Icons/bullseye.png", typeof (Texture)) as Texture;
-    }
 
     private void GridUpdate(SceneView sceneview)
     {
         var e = Event.current; // get current event.
         var r = Camera.current.ScreenPointToRay(new Vector3(e.mousePosition.x, -e.mousePosition.y + Camera.current.pixelHeight));
         var mousePos = r.origin;
+
+        DrawButton();
 
         if (e.isKey)
         {
@@ -256,19 +248,19 @@ public class GridEditor : Editor
             switch (e.character) {
                 case 'a' : // dynamic
                 {
-                    prefab = _prefabs[0];
+                    prefab = AssetDB.Prefabs[0];
                     pefabType = TileType.Dynamic;
                     break;
                 }
                 case 's': // static
                 {
-                    prefab = _prefabs[1];
+                    prefab = AssetDB.Prefabs[1];
                     pefabType = TileType.Static;
                     break;
                 }
                 case 'd':
                 {
-                    prefab = _prefabs[2];
+                    prefab = AssetDB.Prefabs[2];
                     pefabType = TileType.Hostile;
                     break;
                 }
@@ -276,19 +268,27 @@ public class GridEditor : Editor
 
             if (prefab != null && _grid.IsInGrid(mousePos))
             {
-//                //var obj = (GameObject) Instantiate(prefab);
-//                var obj = (GameObject)PrefabUtility.InstantiatePrefab(prefab);
-//
-//                var aligned = new Vector3(Mathf.Floor(mousePos.x / _grid.width) * _grid.width + _grid.width / 2.0f, Mathf.Floor(mousePos.y / _grid.height) * _grid.height + _grid.height / 2.0f, 0.0f);
-//                obj.transform.position = aligned;
-//                obj.transform.localScale = new Vector3(_grid.width, _grid.height, 1);
-//
-//                // add this object to dah grid.
-//                var indexx = Mathf.Floor((mousePos.x - _grid.startPoint.x) / _grid.width);
-//                var indexy = Mathf.Floor((mousePos.y - _grid.startPoint.y) / _grid.height);
-                _grid.AddRemoveItem(pefabType, prefab, mousePos);
+             _grid.AddRemoveItem(pefabType, prefab, mousePos);
             }
         }
 
+    }
+
+    public void DrawButton() {
+        Handles.BeginGUI();
+        GUILayout.BeginArea(new Rect(2, 2, 100,50));
+            if(GUILayout.Button("Start simulation")) {
+            } 
+        GUILayout.EndArea();
+     GUILayout.BeginArea(new Rect(102, 2, 60,50));
+            if(GUILayout.Button(">>")) {
+                _grid.NextSimulationStep();
+            } 
+        GUILayout.EndArea();
+         GUILayout.BeginArea(new Rect(162, 2, 90,50));
+            if(GUILayout.Button("Restart")) {
+            } 
+        GUILayout.EndArea();
+        Handles.EndGUI();
     }
 }
