@@ -91,6 +91,9 @@ public class Grid : MonoBehaviour
 
     void InitGrid()
     {
+        if (propagationRules == null)
+            propagationRules = new List<PropagationRule>();
+
         _cells = new byte[rows][];
         _lastCells = new byte[rows][];
 
