@@ -73,8 +73,8 @@ public class PlayerMove : MonoBehaviour
     {
         _isFacingRight = !_isFacingRight;
 
-        var theScale = transform.localScale;
-        theScale.x *= -1;
-        transform.localScale = theScale;
+      //  var theScale = transform.localScale;
+    //    theScale.x *= -1;
+      //  transform.localScale = theScale;
     }
 }

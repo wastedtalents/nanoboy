@@ -1,0 +1,87 @@
+Setup:
+Move the 'Gizmos' folder to the root 'Assets' folder to use Gizmos.
+Add lights by going to "GameObject -> Create Other -> 2DVLS -> ......"
+
+
+FAQ:
+Q - Where can I find help and tutorials on 2DVLS?
+   A - "GameObject -> Create Other -> 2DVLS -> Help -> ......"
+
+Q - The lights do not 'light up' the objects in my scene. Instead they seem to go through the object!
+   A - Prior to V3.3 you could use "2DVLS/Diffuse" or "2DVLS/Cuttout" shaders on the objects you wish for the lights to affect. Since the release of 3.3
+       I have chosen to no longer support those shaders. You can only obtain the lighting effect if you are using Unity Pro. If you are not using Unity Pro
+	   you can still use 2DVLS you just will not be able to 'cut' through any ambient color. You can see an example of this effect by looking at games such
+	   as 'Super Meat Boy', 'Rayman Origins', and 'Mark of the Ninja'
+
+
+API Reference:
+
+- Enums -
+
+LightDetailSetting		Light2D.LightDetailSetting.Rays_50
+LightDetailSetting		Light2D.LightDetailSetting.Rays_100
+LightDetailSetting		Light2D.LightDetailSetting.Rays_200
+LightDetailSetting 		Light2D.LightDetailSetting.Rays_300
+LightDetailSetting 		Light2D.LightDetailSetting.Rays_400
+LightDetailSetting 		Light2D.LightDetailSetting.Rays_500
+LightDetailSetting 		Light2D.LightDetailSetting.Rays_600
+LightDetailSetting 		Light2D.LightDetailSetting.Rays_700
+LightDetailSetting 		Light2D.LightDetailSetting.Rays_800
+LightDetailSetting 		Light2D.LightDetailSetting.Rays_900
+LightDetailSetting 		Light2D.LightDetailSetting.Rays_1000
+LightDetailSetting 		Light2D.LightDetailSetting.Rays_2000
+LightDetailSetting 		Light2D.LightDetailSetting.Rays_3000
+LightDetailSetting 		Light2D.LightDetailSetting.Rays_4000
+LightDetailSetting 		Light2D.LightDetailSetting.Rays_5000
+
+LightEventListenerType 		OnEnter
+LightEventListenerType 		OnStay
+LightEventListenerType 		OnExit
+
+PivotPointType		Light2D.PivotPointType.Center
+PivotPointType		Light2D.PivotPointType.End
+PivotPointType		Light2D.PivotPointType.Custom
+
+- Static Create Methods -
+ 
+Shadow2D.Create(Vector3 _position, Color _color, float _radius = 1, float _coneAngle = 360, float _coneStart = 0, Material _material = null);
+Shadow3D.Create(Vector3 _position, Color _color, float _radius = 1, float _coneAngle = 360, float _coneStart = 0, Material _material = null);
+RadialLight2D.Create(Vector3 _position, Color _color, float _radius = 1, float _coneAngle = 360, float _coneStart = 0, Material _material = null);
+RadialLight3D.Create(Vector3 _position, Color _color, float _radius = 1, float _coneAngle = 360, float _coneStart = 0, Material _material = null);
+DirectLight2D.Create(Vector3 _position, Color _color, float _radius = 1, float _coneAngle = 360, float _coneStart = 0, Material _material = null);
+
+- Helpful Functions -
+
+bool ToggleLight()					Toggles light on or off and returns light state
+bool ToggleLight(bool _updateMesh)	""
+void LookAt(Vector3 _target)		Forces light to look at _target using Right vector.
+void LookAt(Transform _target)		""
+void LookAt(GameObject _target)		""
+
+
+- Public Variables -
+
+LightRadius 	 			float				Sets radius of light
+LightBeamSize				float				Sets the width of the directional light beam (Local X-Axis)
+LightBeamRange				float				Sets the distance of the directional light beam (Local Y-Axis)
+LightConeAngle				float				Sets the light cone angle
+LightConeStart				float				Sets the rotation of the lights cone
+LightColor 	 				Color				Sets the lights color
+LightDetail 				LightDetailSetting	Sets how many rays are cast from light per update
+LightMaterial 	 			Material			Sets the material of the lights
+ShadowMask 	 				LayerMask			Sets the shadow layer. The layer listed in this will be the layer the lights detect
+EnableEvents				bool				If 'TRUE' event messages will be sent
+LightEnabled				bool				Sets the lights visibility.
+IsVisible					bool				Gets if the lights renderer is currently visible. (READ-ONLY)
+IsStatic					bool				If 'TRUE' light will only be rendered once in the "Start()" function
+DirectionalLightPivotPoint	Vector3				Returns the directional lights custom pivot point Vector.
+DirectionalPivotPointType	PivotPointType		Sets which type of pivot point will be used on the directional light
+UVTiling					Vector2				Sets the UV tiling value
+UVOffset					Vector2				Sets the UV offset value
+
+- EVENTS -
+
+void Light2DEvent(Light2D lightObject, GameObject objectInLight)			Delegate used for events
+
+Light2D.RegisterEventListener(LightEventListenerType _eventType, Light2DEvent _eventMethod)		Static method used to register event functions
+Light2D.UnregisterEventListener(LightEventListenerType _eventType, Light2DEvent _eventMethod)	Static method used to unregister event functions
