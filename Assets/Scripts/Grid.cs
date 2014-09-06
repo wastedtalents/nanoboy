@@ -75,6 +75,8 @@ public class Grid : MonoBehaviour
     private Platform _tempPlatform;
     private int _tempIndex;
     private int _index;
+    private Vector2 _tempVector;
+    private Platform _platform;
 
     static Grid()
     {
@@ -134,9 +136,15 @@ public class Grid : MonoBehaviour
                 {
                     foreach (var ob in _objects.Values)
                     {
-                        newScale.x = newValue;
-                        newScale.y = ob.transform.localScale.y;
-                        ob.transform.localScale = newScale;
+                        // recalc scale
+                       CalcScale(ob, newValue, height);
+
+                       // reposition.
+                       _platform = ob.GetComponent<Platform>();
+                       _tempVector.x = startPoint.x + _platform.gridXpos * newValue + newValue / 2;
+                       _tempVector.y = startPoint.y + _platform.gridYpos * height + height / 2;
+                       ob.transform.position = _tempVector;
+                   
                     }
                     break;
                 }
@@ -144,9 +152,14 @@ public class Grid : MonoBehaviour
                 {
                     foreach (var ob in _objects.Values)
                     {
-                        newScale.x = ob.transform.localScale.x;
-                        newScale.y = newValue;
-                        ob.transform.localScale = newScale;
+                        CalcScale(ob, width, newValue);
+
+                        // reposition.
+                        _platform = ob.GetComponent<Platform>();
+                        _tempVector.x = startPoint.x + _platform.gridXpos * width + width / 2;
+                        _tempVector.y = startPoint.y + _platform.gridYpos * newValue + newValue / 2;
+                        ob.transform.position = _tempVector;
+
                     }
                     break;
                 }
@@ -173,6 +186,11 @@ public class Grid : MonoBehaviour
             case RedrawMode.Rows:
                 {
                     var newCells = new byte[(int)newValue][];
+                    if (newValue > oldValue)
+                    {
+                        DisposeGrid(_lastCells);
+                        _lastCells = new byte[(int)newValue][];
+                    }
                     for (var row = 0; row < newValue; row++)
                     {
                         newCells[row] = new byte[cols];
@@ -319,6 +337,27 @@ public class Grid : MonoBehaviour
         _objects[_index] = obj;
 
         obj.transform.parent = root.transform;
+
+        CalcScale(obj);
+    }
+
+    /// <summary>
+    /// Calculates the correct scale of an object.
+    /// </summary>
+    private void CalcScale(GameObject obj)
+    {
+        CalcScale(obj, width, height);
+    }
+
+    private void CalcScale(GameObject obj, float newWidth, float newHeight)
+    {
+        if (newWidth == 0)
+            newWidth = 0.0001f;
+        if (newHeight == 0)
+            newHeight = 0.0001f;
+        _tempVector.x = (1.0f / obj.renderer.bounds.size.x) * newWidth * obj.transform.localScale.x;
+        _tempVector.y = (1.0f / obj.renderer.bounds.size.y) * newHeight * obj.transform.localScale.y;
+        obj.transform.localScale = new Vector2(_tempVector.x, _tempVector.y);
     }
 
     /// <summary>
@@ -346,6 +385,8 @@ public class Grid : MonoBehaviour
                 startPoint.y + Mathf.Floor(posY / height) * height + height / 2.0f + tileOffsetY, 0.0f);
 
             AddCell(aligned, prefab, pefabType, indexy, indexx);
+
+
         }
     }
 
