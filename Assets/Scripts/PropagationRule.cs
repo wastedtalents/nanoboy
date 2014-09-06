@@ -27,7 +27,7 @@ public class IntTuple {
 }
 
 [Serializable]
-public class PropagationRule : ScriptableObject, IDisposable
+public class PropagationRule : IDisposable
 {
     private static Dictionary<AggregateRuleOp, string> _opMappers;
 

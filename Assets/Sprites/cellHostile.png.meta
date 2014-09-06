@@ -1,8 +1,8 @@
 fileFormatVersion: 2
-guid: ad6b9e21a35ddde40a623ab0129117fb
+guid: f6778103ca23ef04f96ea1f6285f395a
 TextureImporter:
   fileIDToRecycleName:
-    21300000: brick3
+    21300000: hostileCell
     21300002: cellHostile
   serializedVersion: 2
   mipmaps:

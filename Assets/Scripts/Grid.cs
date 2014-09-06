@@ -123,6 +123,7 @@ public class Grid : MonoBehaviour
 
     public void UpdateGrid(RedrawMode redraw, float oldValue, float newValue)
     {
+        EnsureRootObject();
         var newScale = new Vector2();
         switch (redraw)
         {
@@ -172,6 +173,7 @@ public class Grid : MonoBehaviour
                     for (var row = 0; row < newValue; row++)
                     {
                         newCells[row] = new byte[cols];
+                        _lastCells[row] = new byte[cols];
                         if(row < oldValue)
                             Array.Copy(_cells[row], newCells[row], cols);
                     }
@@ -179,9 +181,9 @@ public class Grid : MonoBehaviour
                     _cells = newCells;
 
                     if (newValue < oldValue)
-                    {
+                    {                        
                         // destroy objects that are not in the grid anymo'
-                        _rootObj = GameObject.FindGameObjectWithTag(ROOT_TAG);
+                        _rootObj = GameObject.FindGameObjectWithTag(ROOT_TAG);                        
                         foreach (Transform trans in _rootObj.transform)
                         {
                             _tempPlatform = trans.GetComponent<Platform>();
@@ -203,6 +205,7 @@ public class Grid : MonoBehaviour
                     for (var row = 0; row < rows; row++)
                     {
                         newCells[row] = new byte[(int)newValue];
+                        _lastCells[row] = new byte[(int)newValue];
                         Array.Copy(_cells[row], newCells[row], (int)maxCols);
                     }
                     DisposeGrid(_cells);

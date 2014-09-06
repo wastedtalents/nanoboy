@@ -1,9 +1,8 @@
 fileFormatVersion: 2
-guid: 56944dca680b7c2458dbfa02cd6b14eb
+guid: 9099249488683b64fbb1c42fe3895089
 TextureImporter:
   fileIDToRecycleName:
-    21300000: cellStatic 1
-    21300002: cellStatic
+    21300000: playerCell
   serializedVersion: 2
   mipmaps:
     mipMapMode: 0
@@ -27,9 +26,9 @@ TextureImporter:
   maxTextureSize: 1024
   textureSettings:
     filterMode: -1
-    aniso: 1
+    aniso: -1
     mipBias: -1
-    wrapMode: 1
+    wrapMode: -1
   nPOTScale: 0
   lightmap: 0
   compressionQuality: 50
