@@ -117,7 +117,7 @@ public class GridEditor : Editor
 
             // SUMMARY.
             GUILayout.Space(10); // Summary
-            GUILayout.Label("--------------Summary-----------"); // Summary
+            GUILayout.Label("--------------Summary (" + _grid.Objects.Count + ")-----------"); // Summary
             GUILayout.Space(10); // Summary
 
             foreach (var obj in _grid.Objects)

@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Text;
-using UnityEditor;
 using UnityEngine;
 using System.Collections.Generic;
 
@@ -29,8 +28,10 @@ public class IntTuple {
 [Serializable]
 public class PropagationRule : IDisposable
 {
-    private static Dictionary<AggregateRuleOp, string> _opMappers;
+    private static readonly Dictionary<AggregateRuleOp, string> _opMappers;
+    private static readonly Dictionary<AggregateRuleOp, Func<PropagationRule, byte[][], int, int, bool>> _aggreagateMappers;
 
+    private Func<int, int, bool> _predicate;
     public string name;
     public PropagationRuleType type;
     public RecipientTileType forTileType = RecipientTileType.Dynamic; 
@@ -38,7 +39,11 @@ public class PropagationRule : IDisposable
     public IntTuple numbers;
     public bool forLiveCell;
 
+    private float tempf;
+
     public ByteArrayWrapper[] preCondition;
+    
+    
 
     static PropagationRule() {
         _opMappers = new Dictionary<AggregateRuleOp, string>();
@@ -48,6 +53,76 @@ public class PropagationRule : IDisposable
         _opMappers.Add(AggregateRuleOp.LesserEq, "<=");
         _opMappers.Add(AggregateRuleOp.GreaterEq, ">=");
         _opMappers.Add(AggregateRuleOp.Between, "between");
+
+        // mappers
+        _aggreagateMappers = new Dictionary<AggregateRuleOp, Func<PropagationRule, byte[][], int, int, bool>>();
+        _aggreagateMappers.Add(AggregateRuleOp.Between, (rule, grid, row, col) =>
+        {
+            var tempf = PropagationRule.SumNeightbours(rule, grid, row, col);
+            return tempf >= rule.numbers.value1 && tempf <= rule.numbers.value2;
+        });
+        _aggreagateMappers.Add(AggregateRuleOp.Equals, (rule, grid, row, col) =>
+        {
+            var tempf = PropagationRule.SumNeightbours(rule, grid, row, col);
+            return tempf == rule.numbers.value1;
+        });
+        _aggreagateMappers.Add(AggregateRuleOp.Greater, (rule, grid, row, col) =>
+        {
+            var tempf = PropagationRule.SumNeightbours(rule, grid, row, col);
+            return tempf > rule.numbers.value1;
+        });
+        _aggreagateMappers.Add(AggregateRuleOp.GreaterEq, (rule, grid, row, col) =>
+        {
+            var tempf = PropagationRule.SumNeightbours(rule, grid, row, col);
+            return tempf >= rule.numbers.value1;
+        });
+        _aggreagateMappers.Add(AggregateRuleOp.Lesser, (rule, grid, row, col) =>
+        {
+            var tempf = PropagationRule.SumNeightbours(rule, grid, row, col);
+            return tempf < rule.numbers.value1;
+        });
+        _aggreagateMappers.Add(AggregateRuleOp.LesserEq, (rule, grid, row, col) =>
+        {
+            var tempf = PropagationRule.SumNeightbours(rule, grid, row, col);
+            return tempf <= rule.numbers.value1;
+        });
+
+    }
+
+    private static int _sum;
+
+    public static int SumNeightbours(PropagationRule rule, byte[][] grid, int row, int col)
+    {
+        _sum = 0;
+        if (rule.type == PropagationRuleType.R_3X3 || rule.type == PropagationRuleType.Aggregate) // 3v3
+        {
+            for (int i = (row == 0 ? 0 : row - 1); i <= ((row >= grid.Length - 1) ? row : row + 1); i++) {
+                            for (int j = (col == 0 ? 0 : col - 1); j <= ((col >= grid[0].Length - 1) ? col : col + 1); j++)
+                            {
+                                if (i != row || j != col)
+                                    _sum += grid[i][j] == 0 ? 0 : 1; // that is to be changed to account for any board element.
+                            }
+                        }
+        }
+
+        return _sum;
+
+//            if (row > 0)
+//            {
+//                 if(col > 0)  // [y-1][x-1]
+//                    _sum += grid[row - 1][col - 1] == 0 ? 0 : 1;
+//                        // poki co dodajemy jeden! ale potem trzebna pod typy jeszcze rozkminke puscic.
+//            }
+
+//        }
+//        for (int i = (row == 0 ? 0 : row - 1); i <= ((row >= rows - 1) ? row : row + 1); i++)
+//        {
+//            for (int j = (col == 0 ? 0 : col - 1); j <= ((col >= cols - 1) ? col : col + 1); j++)
+//            {
+//                if (i != row || j != col)
+//                    sum += board[i][j]; // that is to be changed to account for any board element.
+//            }
+//        }
     }
 
     public PropagationRule()
@@ -135,4 +210,19 @@ public class PropagationRule : IDisposable
             DisposeGrid(preCondition);
             preCondition = null;
         }
+
+    /// <summary>
+    /// Compile the predicate.
+    /// </summary>
+    public bool IsAlive(byte[][] grid, int row, int col)
+    {
+        switch (type)
+        {
+            case PropagationRuleType.Aggregate:
+            {
+                return _aggreagateMappers[ruleOp](this, grid, row, col);
+            }
+        }
+        return false;
     }
+}

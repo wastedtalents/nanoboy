@@ -313,10 +313,7 @@ public class Grid : MonoBehaviour
     /// Destroys cell.
     /// </summary>
     public void DestroyCell(int row, int col)
-    {
-        foreach(var key in _objects.Keys)
-            Debug.Log("K " + key);
-
+    {    
         _cells[row][col] = (byte)TileType.None;
 
         _index = GetIndex(row, col);
@@ -419,47 +416,73 @@ public class Grid : MonoBehaviour
         Simulate();
     }
 
-    void Simulate() {
-         for(int row = 0; row < rows; row++) { 
-             for(int col = 0; col < cols; col++) {
-                 var neighbours = AliveNeighbours(_lastCells, row, col);
-                 var isAlive = _cells[row][col] == 1;
-                 if(isAlive) {
-                     if (neighbours > 3 || neighbours < 2)
-                     {
-                         DestroyCell(row,col);
-                     }
-                 }
-                 else if(neighbours == 3)
-                 {
-                     var position = new Vector3(col * width + startPoint.x + width / 2.0f + tileOffsetX, row * height + startPoint.y + height / 2.0f + tileOffsetY, 0);
-                     AddCell(position, AssetDB.Prefabs[0], TileType.Dynamic, row, col); // TODO : change this to account for other types.
-                     _cells[row][col] = (byte)TileType.Dynamic;
-                 }
-             }
-         }
-    }
-
-    /// <summary>
-    /// Count alive neighbours of a cell.
-    /// </summary>
-    /// <param name="board"></param>
-    /// <param name="row"></param>
-    /// <param name="col"></param>
-    /// <returns></returns>
-    int AliveNeighbours(byte[][] board, int row, int col)
-    {
-        var sum = 0;
-        for (int i = (row == 0 ? 0 : row - 1); i <= ((row >= rows - 1) ? row : row + 1); i++)
+    void Simulate()
+    {       
+        for (int row = 0; row < rows; row++)
         {
-            for (int j = (col == 0 ? 0 : col - 1); j <= ((col >= cols - 1) ? col : col + 1); j++)
+            for (int col = 0; col < cols; col++)
             {
-                if (i != row || j != col)
-                    sum += board[i][j]; // that is to be changed to account for any board element.
+                var isAlive = _cells[row][col] != 0;
+                var rules = propagationRules.Where(p => p.forLiveCell == isAlive).ToList(); // get rules for alive cells.
+                bool willLive = rules.Any() || isAlive; // if there are totaly no rules for me, do nothin.
+                foreach (var rule in rules)
+                {
+                    willLive = willLive && rule.IsAlive(_lastCells, row, col);
+                    if (willLive)
+                        break;
+                }
+                if (willLive && !isAlive) // create new one
+                {
+                    var position = new Vector3(col * width + startPoint.x + width / 2.0f + tileOffsetX, row * height + startPoint.y + height / 2.0f + tileOffsetY, 0);
+                    AddCell(position, AssetDB.Prefabs[0], TileType.Dynamic, row, col); // TODO : change this to account for other types.
+                    _cells[row][col] = (byte)TileType.Dynamic;
+                }
+                else if (!willLive && isAlive) // if we need to destroy
+                {
+                    DestroyCell(row, col);
+                }
+
+//                var neighbours = CountNeighbours(_lastCells, row, col);
+//                var isAlive = _cells[row][col] == 1;
+//                if (isAlive)
+//                {
+//                    if (neighbours > 3 || neighbours < 2)
+//                    {
+//                        DestroyCell(row, col);
+//                    }
+//                }
+//                else if (neighbours == 3)
+//                {
+//                    var position = new Vector3(col * width + startPoint.x + width / 2.0f + tileOffsetX, row * height + startPoint.y + height / 2.0f + tileOffsetY, 0);
+//                    AddCell(position, AssetDB.Prefabs[0], TileType.Dynamic, row, col); // TODO : change this to account for other types.
+//                    _cells[row][col] = (byte)TileType.Dynamic;
+//                }
             }
         }
-        return sum;
     }
+
+
+//    void Simulate() {
+//         for(int row = 0; row < rows; row++) { 
+//             for(int col = 0; col < cols; col++) {
+//                 var neighbours = CountNeighbours(_lastCells, row, col);
+//                 var isAlive = _cells[row][col] == 1;
+//                 if(isAlive) {
+//                     if (neighbours > 3 || neighbours < 2)
+//                     {
+//                         DestroyCell(row,col);
+//                     }
+//                 }
+//                 else if(neighbours == 3)
+//                 {
+//                     var position = new Vector3(col * width + startPoint.x + width / 2.0f + tileOffsetX, row * height + startPoint.y + height / 2.0f + tileOffsetY, 0);
+//                     AddCell(position, AssetDB.Prefabs[0], TileType.Dynamic, row, col); // TODO : change this to account for other types.
+//                     _cells[row][col] = (byte)TileType.Dynamic;
+//                 }
+//             }
+//         }
+//    }
+
 
     void BackupGrid() {
         for(int i=0; i < rows; i++) {
