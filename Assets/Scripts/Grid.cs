@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Runtime.InteropServices;
 using UnityEditor;
 using UnityEngine;
@@ -69,6 +70,11 @@ public class Grid : MonoBehaviour
     private byte[][] _cells;
     private byte[][] _lastCells;
     private Dictionary<int, GameObject> _objects;
+
+    public List<GameObject> Objects
+    {
+        get { return _objects.Values.ToList(); }
+    }
 
     // temps.
     private GameObject _rootObj;
@@ -306,8 +312,11 @@ public class Grid : MonoBehaviour
     /// <summary>
     /// Destroys cell.
     /// </summary>
-    private void DestroyCell(int row, int col)
+    public void DestroyCell(int row, int col)
     {
+        foreach(var key in _objects.Keys)
+            Debug.Log("K " + key);
+
         _cells[row][col] = (byte)TileType.None;
 
         _index = GetIndex(row, col);

@@ -15,6 +15,9 @@ public class GridEditor : Editor
 
     private PropagationRule _newRule;
     private PropagationRuleType _tempPropType;
+    private GameObject[] _selection = new GameObject[1];
+
+    private Platform _platform;
 
 
     public override void OnInspectorGUI()
@@ -24,6 +27,8 @@ public class GridEditor : Editor
         // GRID SETTING.
         if (_showGridSection)
         {
+            _markedToDestroy = null;
+
             // Paint.
             EditorGUILayout.BeginHorizontal();
             GUILayout.Label(" Grid Width ");
@@ -110,6 +115,32 @@ public class GridEditor : Editor
                 }
             }
 
+            // SUMMARY.
+            GUILayout.Space(10); // Summary
+            GUILayout.Label("--------------Summary-----------"); // Summary
+            GUILayout.Space(10); // Summary
+
+            foreach (var obj in _grid.Objects)
+            {
+                GUILayout.BeginHorizontal();
+                _platform = obj.GetComponent<Platform>();
+                GUILayout.Label(String.Format("({0},{1})", _platform.gridXpos, _platform.gridYpos));
+                if (GUILayout.Button("Remove", GUILayout.Width(100)))
+                {
+                    _markedToDestroy = _platform;
+                }
+                if (GUILayout.Button("Select", GUILayout.Width(100)))
+                {
+                    _selection[0] = obj;
+                    Selection.objects = _selection;
+                    SceneView.lastActiveSceneView.FrameSelected();
+                }
+                GUILayout.EndHorizontal();
+            }
+            // marked to destroy.
+            if(_markedToDestroy != null)
+                _grid.DestroyCell(_markedToDestroy.gridYpos, _markedToDestroy.gridXpos);
+
         }
 
         _showRulesSection = EditorGUILayout.Foldout(_showRulesSection, "Rules");
@@ -177,6 +208,7 @@ public class GridEditor : Editor
 	}
 
     private int _tempX, _tempY;
+    private Platform _markedToDestroy;
 
     private void DrawRuleGrid(string name, PropagationRuleType type)
     {
