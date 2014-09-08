@@ -236,7 +236,7 @@ public class GridEditor : Editor
                     if (row == _tempY && col == _tempX)
                         GUILayout.Label("    X", GUILayout.Width(50));
                     else
-                        _newRule.preCondition[row][col] = (byte) DrawEnums("", _newRule.preCondition[row][col],
+                        _newRule.preCondition[(_newRule.preCondition.Length - 1) - row][(_newRule.preCondition[row].Length - 1) - col] = (byte)DrawEnums("", _newRule.preCondition[(_newRule.preCondition.Length - 1) - row][(_newRule.preCondition[row].Length - 1) - col],
                             typeof (TileTypeAbbrev), GUILayout.Width(50));
                 }
                 GUILayout.EndHorizontal();            
