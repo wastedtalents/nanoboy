@@ -71,6 +71,9 @@ public class Grid : MonoBehaviour
     private byte[][] _lastCells;
     private Dictionary<int, GameObject> _objects;
 
+    private string _rootObjectTag;
+    private string _rootObjectName;
+
     public List<GameObject> Objects
     {
         get { return _objects.Values.ToList(); }
@@ -89,6 +92,12 @@ public class Grid : MonoBehaviour
         TileTypeAbbrevNames = Enum.GetNames(typeof(TileTypeAbbrev));
     }
 
+    void Awake()
+    {
+        _rootObjectTag = String.Format("{0}_{1}", ROOT_TAG, gameObject.name);
+        _rootObjectName = String.Format("{0}_{1}", ROOT_NAME, gameObject.name);
+    }
+
     void OnEnable()
     {
         if (_cells == null)
@@ -99,6 +108,8 @@ public class Grid : MonoBehaviour
 
     void InitGrid()
     {
+        EnsureRootObject();
+
         if (propagationRules == null)
             propagationRules = new List<PropagationRule>();
 
@@ -114,7 +125,7 @@ public class Grid : MonoBehaviour
 
         // reload currently visible data.
         var items = 0;
-        _rootObj = GameObject.FindGameObjectWithTag(ROOT_TAG);
+        _rootObj = GameObject.FindGameObjectWithTag(_rootObjectTag);
         if (_rootObj == null)
             return;
 
@@ -210,7 +221,7 @@ public class Grid : MonoBehaviour
                     if (newValue < oldValue)
                     {                        
                         // destroy objects that are not in the grid anymo'
-                        _rootObj = GameObject.FindGameObjectWithTag(ROOT_TAG);                        
+                        _rootObj = GameObject.FindGameObjectWithTag(_rootObjectTag);                        
                         foreach (Transform trans in _rootObj.transform)
                         {
                             _tempPlatform = trans.GetComponent<Platform>();
@@ -241,7 +252,7 @@ public class Grid : MonoBehaviour
                     if (newValue < oldValue)
                     {
                         // destroy objects that are not in the grid anymo'
-                        _rootObj = GameObject.FindGameObjectWithTag(ROOT_TAG);
+                        _rootObj = GameObject.FindGameObjectWithTag(_rootObjectTag);
                         foreach (Transform trans in _rootObj.transform)
                         {
                             _tempPlatform = trans.GetComponent<Platform>();
@@ -296,10 +307,10 @@ public class Grid : MonoBehaviour
 
     GameObject EnsureRootObject()
     {
-        var obj = GameObject.FindGameObjectWithTag(ROOT_TAG);
+        var obj = GameObject.FindGameObjectWithTag(_rootObjectTag);
         if (obj == null)
         {
-            obj = new GameObject { tag = ROOT_TAG, name = ROOT_NAME };
+            obj = new GameObject { tag = _rootObjectTag, name = _rootObjectName };
         }
         return obj;
     }
@@ -398,7 +409,7 @@ public class Grid : MonoBehaviour
 
     public void Reset()
     {
-        var root = GameObject.FindGameObjectWithTag(ROOT_TAG);
+        var root = GameObject.FindGameObjectWithTag(_rootObjectTag);
         DestroyImmediate(root);
         InitGrid();
     }

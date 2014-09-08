@@ -119,15 +119,15 @@ public class PropagationRule : IDisposable
             bool earlyBreak = false; // for rules that are impossible to execute.
             if (row == 0)
             {
-                earlyBreak = rule.preCondition[0][0] != (byte)TileType.None ||
-                          rule.preCondition[0][1] != (byte)TileType.None ||
-                          rule.preCondition[0][2] != (byte)TileType.None;
+                earlyBreak = rule.preCondition[2][0] != (byte)TileType.None ||
+                          rule.preCondition[2][1] != (byte)TileType.None ||
+                          rule.preCondition[2][2] != (byte)TileType.None;
             }
             if (row == grid.Length - 1)
             {
-                earlyBreak = earlyBreak || (rule.preCondition[2][0] != (byte)TileType.None ||
-                          rule.preCondition[2][1] != (byte)TileType.None ||
-                          rule.preCondition[2][2] != (byte)TileType.None);
+                earlyBreak = earlyBreak || (rule.preCondition[0][0] != (byte)TileType.None ||
+                          rule.preCondition[0][1] != (byte)TileType.None ||
+                          rule.preCondition[0][2] != (byte)TileType.None);
             }
             if (col == 0)
             {
@@ -146,9 +146,9 @@ public class PropagationRule : IDisposable
                 return 0; // we failed.
 
 
-            for (int i = (row == 0 ? 0 : row - 1), ii = (row == 0 ? 1 : 0); i <= ((row >= grid.Length - 1) ? row : row + 1); i++, ii++)
+            for (int i = (row == 0 ? 0 : row - 1), ii = (row == 0 ? (rule.preCondition.Length - 2) : (rule.preCondition.Length - 1)); i <= ((row >= grid.Length - 1) ? row : row + 1); i++, ii--)
             {
-                for (int j = (col == 0 ? 0 : col - 1), jj = (col == 0 ? 1 : 0); j <= ((col >= grid[0].Length - 1) ? col : col + 1); j++, jj++)
+                for (int j = (col == 0 ? 0 : col - 1), jj = (col == 0 ? (rule.preCondition[0].Length - 2) : (rule.preCondition[0].Length - 1)); j <= ((col >= grid[0].Length - 1) ? col : col + 1); j++, jj--)
                 {
                     if (i != row || j != col)
                     {
