@@ -438,25 +438,7 @@ public class Grid : MonoBehaviour
                     _cells[row][col] = (byte)TileType.Dynamic;
                 }
                 else if (!willLive && isAlive) // if we need to destroy
-                {
                     DestroyCell(row, col);
-                }
-
-//                var neighbours = CountNeighbours(_lastCells, row, col);
-//                var isAlive = _cells[row][col] == 1;
-//                if (isAlive)
-//                {
-//                    if (neighbours > 3 || neighbours < 2)
-//                    {
-//                        DestroyCell(row, col);
-//                    }
-//                }
-//                else if (neighbours == 3)
-//                {
-//                    var position = new Vector3(col * width + startPoint.x + width / 2.0f + tileOffsetX, row * height + startPoint.y + height / 2.0f + tileOffsetY, 0);
-//                    AddCell(position, AssetDB.Prefabs[0], TileType.Dynamic, row, col); // TODO : change this to account for other types.
-//                    _cells[row][col] = (byte)TileType.Dynamic;
-//                }
             }
         }
     }

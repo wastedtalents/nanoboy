@@ -94,7 +94,7 @@ public class PropagationRule : IDisposable
     public static int SumNeightbours(PropagationRule rule, byte[][] grid, int row, int col)
     {
         _sum = 0;
-        if (rule.type == PropagationRuleType.R_3X3 || rule.type == PropagationRuleType.Aggregate) // 3v3
+        if (rule.type == PropagationRuleType.Aggregate) // 3v3
         {
             for (int i = (row == 0 ? 0 : row - 1); i <= ((row >= grid.Length - 1) ? row : row + 1); i++) {
                             for (int j = (col == 0 ? 0 : col - 1); j <= ((col >= grid[0].Length - 1) ? col : col + 1); j++)
@@ -103,6 +103,30 @@ public class PropagationRule : IDisposable
                                     _sum += grid[i][j] == 0 ? 0 : 1; // that is to be changed to account for any board element.
                             }
                         }
+        }
+        else if (rule.type == PropagationRuleType.R_3X3) // 3x3 precondition
+        {
+            var isFulfilled = true;
+
+            try
+            {
+                for (int i = (row == 0 ? 0 : row - 1), ii = (row == 0 ? 1 : 0); i <= ((row >= grid.Length - 1) ? row : row + 1); i++, ii++)
+                {
+                    for (int j = (col == 0 ? 0 : col - 1), jj = (col == 0 ? 1 : 0); j <= ((col >= grid[0].Length - 1) ? col : col + 1); j++, jj++)
+                    {
+                        if (i != row || j != col)
+                        {
+                            isFulfilled = isFulfilled && ((grid[i][j] == 0 && rule.preCondition[ii][jj] == 0) ||
+                                          (grid[i][j] != 0 && rule.preCondition[ii][jj] != 0)); // to bef ixed.
+                        }
+                    }
+                }
+            }
+            catch (Exception e)
+            {
+                Debug.Log(e.ToString());
+            }
+            return isFulfilled ? 1 : 0; // specific condition.
         }
 
         return _sum;
@@ -221,6 +245,11 @@ public class PropagationRule : IDisposable
             case PropagationRuleType.Aggregate:
             {
                 return _aggreagateMappers[ruleOp](this, grid, row, col);
+            }
+            case PropagationRuleType.R_3X3:
+            {
+                var ret =  SumNeightbours(this, grid, row, col) == 1;
+                return ret;
             }
         }
         return false;
