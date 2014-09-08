@@ -422,6 +422,9 @@ public class Grid : MonoBehaviour
         {
             for (int col = 0; col < cols; col++)
             {
+                if (_cells[row][col] == (byte) TileType.Static) // were not making any rules for static.
+                    continue;
+
                 var isAlive = _cells[row][col] != 0;
                 var rules = propagationRules.Where(p => p.forLiveCell == isAlive).ToList(); // get rules for alive cells.
                 bool willLive = rules.Any() || isAlive; // if there are totaly no rules for me, do nothin.
